@@ -9,16 +9,25 @@ const mkdirp = require('mkdirp');
 const { cloneAst, highlight } = require('../utils');
 const { DEFAULT_CHUNK } = require('../settings');
 
+const versionRE = /v?([0-9]+)\.([0-9]+)\.([0-9]+)(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?(?:\+[0-9A-Za-z-]+)?/
+const fileNameRE = /(?:[\w\d-_]+\.)+js/
+const libraryNameRE = /[\w\d]+-[\w\d]+/
+const libraryFromFileNameRE = /[^\.]([\w\d]+-[\w\d]+)\./
+
 // Thrown when a require function is encountered with multiple arguments
 class RequireFunctionHasMultipleArgumentsError extends Error {}
 
 class Module {
-  constructor(chunk, moduleId, ast) {
+  constructor(chunk, moduleId, ast, comments) {
     this.chunk = chunk;
     this.bundle = this.chunk.bundle;
 
     this.id = moduleId;
     this.ast = ast;
+    this.srcComments = [];
+    this.libraryName = null;
+    this.version = null;
+    this.guessedFileName = null;
 
     this._packageName = null;
 
@@ -31,6 +40,37 @@ class Module {
     this.comment = null;
 
     this.scopeManager = escope.analyze(this.ast);
+
+    // Find file name and versions of standard libraries in the code 
+    comments.forEach((comment,index)=>{
+      if(comment.start >= this.ast.start && comment.end <= this.ast.end){
+        this.srcComments.push(comment);
+        if (this.srcComments.length === 1){
+          let version = comment.value.match(versionRE);
+          if (version){
+            this.version = version[1];
+          }
+          let fileName = comment.value.match(fileNameRE);
+          if (fileName){
+            this.guessedFileName = fileName[0];
+            let libraryName = fileName[0].match(libraryFromFileNameRE)
+            if (libraryName){
+              this.libraryName = libraryName[1];
+            }
+          } else {
+            let libraryName = comment.value.match(libraryNameRE)
+            if (libraryName){
+              this.libraryName = libraryName[0];
+              this.guessedFileName = this.libraryName + ".js";
+            }
+          }
+        }
+      }
+    })
+
+    if (this.guessedFileName && this.path === this._defaultPath){
+      this.path = path.join('lib', this.guessedFileName);
+    }
 
     // Find all referenced to `require(...)` in the module, and figure out which modules are being
     // required
@@ -96,7 +136,17 @@ class Module {
 
   code(opts={renameVariables: true, removeClosure: true}) {
     const originalAst = cloneAst(this.ast);
-
+    let codegenOptions = {}
+    //attach comments to source tree
+    if (this.srcComments.length > 0){
+      let tokens = []
+      this.ast.body.body.forEach((e)=>{
+        tokens.push({range: e.range})
+      })
+      escodegen.attachComments(this.ast, this.srcComments, tokens);
+      codegenOptions.comment = true
+      codegenOptions.format = { indent: { adjustMultilineComment: true } }
+    }
     if (opts.renameVariables) {
       if (this.requireVariable) {
         // Adjust all require calls to contain the path to the module that is desired
@@ -152,9 +202,9 @@ class Module {
 
     let code;
     if (opts.removeClosure) {
-      code = newAst.body.body.map(e => escodegen.generate(e)).join('\n');
+      code = newAst.body.body.map(e => escodegen.generate(e, codegenOptions)).join('\n');
     } else {
-      code = escodegen.generate(newAst);
+      code = escodegen.generate(newAst, codegenOptions);
     }
 
     // Add comment to beginning of code, if it is defined.

@@ -12,10 +12,11 @@ const { parseBundleModules } = require('../utils');
 const { DEFAULT_CHUNK } = require('../settings');
 
 class Chunk {
-  constructor(bundle, fileName, bundleModules=null) {
+  constructor(bundle, fileName, bundleModules=null, comments) {
     this.bundle = bundle;
-
+   
     this.fileName = fileName;
+    this.comments = comments;
 
     if (bundleModules) {
       // If bundleModules was already defined, assume that this chunk represents the main bundle.
@@ -105,7 +106,7 @@ class Chunk {
           return [];
         } else {
           return [
-            [moduleId, new Module(this, moduleId, moduleAst)]
+            [moduleId, new Module(this, moduleId, moduleAst, this.comments)]
           ];
         }
       })

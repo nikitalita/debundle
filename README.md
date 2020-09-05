@@ -70,17 +70,17 @@ $ node src/index.js createreactapp.js
 [LOG] Discovered module 25 (chunk ["default"])
 [LOG] Discovered module 26 (chunk ["default"])
 [LOG] Discovered module 27 (chunk ["default"])
-[LOG] Writing all modules to ./dist...
-[LOG] Finished writing all modules to ./dist: wrote 28 files.
+[LOG] Writing all modules to ./output...
+[LOG] Finished writing all modules to ./output: wrote 28 files.
 $
-$ # Now, I can take a look in `./dist`, and see all the modules within the bundle listed out:
-$ ls dist/
+$ # Now, I can take a look in `./output`, and see all the modules within the bundle listed out:
+$ ls output/
 default-0.js   default-12.js  default-15.js  default-18.js  default-20.js  default-23.js default-26.js  default-3.js  default-6.js  default-9.js
 default-10.js  default-13.js  default-16.js  default-19.js  default-21.js  default-24.js default-27.js  default-4.js  default-7.js
 default-11.js  default-14.js  default-17.js  default-1.js   default-22.js  default-25.js default-2.js   default-5.js  default-8.js
 $
 $ # And finally, here's one module. Looks like an `Object.assign` polyfill of some sort?
-$ cat dist/default-0.js 
+$ cat output/default-0.js 
 'use strict';
 function r(e) {
     if (null === e || void 0 === e)

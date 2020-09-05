@@ -1,7 +1,7 @@
 exports.DEFAULT_CHUNK = 'default';
 
 exports.DEFAULT_OPTIONS = {
-  distPath: './dist',
+  distPath: './output',
   chunkFileNameSuffix: '.bundle.js',
   publicPathPrefix: '',
   chunkHttpRequestOptions: {},

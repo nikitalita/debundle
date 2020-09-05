@@ -22,7 +22,7 @@ exports.ExtendedError = class ExtendedError extends Error {
 }
 
 exports.cloneAst = (ast) => {
-  return acorn.parse('var a = '+escodegen.generate(ast), {}).body[0].declarations[0].init;
+  return acorn.parse('var a = '+escodegen.generate(ast), {ranges:true}).body[0].declarations[0].init;
 }
 
 

@@ -25,6 +25,7 @@ class Bundle {
 
     this.chunks = new Map();
     this.logIndentLevel = 0;
+    this.comments = [];
 
     this._options = DEFAULT_OPTIONS;
     // Add a getter / setter on the main bundle object for these options.
@@ -63,8 +64,7 @@ class Bundle {
 
     // HOOK: PreParse
     if (this._hooks.preParse) { this._hooks.preParse(this); }
-
-    this.ast = acorn.parse(bundleContents, {});
+    this.ast = acorn.parse(bundleContents, {onComment: this.comments, ranges: true});
 
     // Add `_parent` property to every node, so that the parent can be
     // determined in later code.
@@ -156,7 +156,7 @@ class Bundle {
   }
   get defaultChunk() { return this.getChunk(DEFAULT_CHUNK); }
   addChunk = (fileName, bundleModules=null) => {
-    const chunk = new Chunk(this, fileName, bundleModules);
+    const chunk = new Chunk(this, fileName, bundleModules, this.comments);
     chunk.ids.forEach(id => {
       this.chunks.set(id, chunk);
     });
