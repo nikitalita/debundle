@@ -41,6 +41,10 @@ class Module {
 
     this.scopeManager = escope.analyze(this.ast);
 
+    let commentstring = "/*"
+    comments.forEach(comment=>{commentstring+=comment.value})
+    commentstring += "*/"
+    fs.writeFileSync("./comments.log.js", commentstring)
     // Find file name and versions of standard libraries in the code 
     comments.forEach((comment,index)=>{
       if(comment.start >= this.ast.start && comment.end <= this.ast.end){
