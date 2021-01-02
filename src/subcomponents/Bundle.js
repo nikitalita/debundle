@@ -12,15 +12,17 @@ const WebpackBootstrap = require('./WebpackBootstrap');
 const Chunk = require('./Chunk');
 
 class Bundle {
-  constructor(p) {
+  constructor(p, config) {
     this.path = p;
     if (!path.isAbsolute(this.path)) {
       // Convert `this.path` to be absolute if it is not.
       const cwd = path.resolve();
       this.path = path.join(cwd, this.path);
     }
-
-    this.metadataFilePath = path.join(path.dirname(this.path), path.basename(this.path)+'.info');
+    if (config && !path.isAbsolute(config)){
+      config = path.join(process.cwd(), config);
+    }
+    this.metadataFilePath = config || path.join(path.dirname(this.path), path.basename(this.path)+'.info');
     this.metadataFileContents = {};
 
     this.chunks = new Map();
@@ -230,7 +232,7 @@ class Bundle {
     });
 
     if (!webpackBootstrap) {
-      throw new WebpackBootstrapNotFoundError(
+      throw new Error(
         [
           `Unable to locate webpackBootstrap, part of a webpack bundle that orchestrates the module system.`,
           `This is a hard requirement to be able to debundle, since it contains a bunch of metadata required`,

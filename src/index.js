@@ -18,9 +18,11 @@ if (require.main !== module) {
 const program = require('commander');
 
 let bundlePath;
+let config;
 program
   .version(require('../package.json').version)
   .option('--verbose', 'output extra debugging information')
+  .option('-c, --config [file]', 'load configuration file')
   .arguments('<bundle>')
   .action(b => {
     bundlePath = b;
@@ -33,7 +35,10 @@ if (!bundlePath) {
   console.error('ie: debundle ./path/to/javascript/bundle.js');
   process.exit(1);
 }
+if (program.config){
+  config = program.config
+}
  
-const bundle = new Bundle(bundlePath);
+const bundle = new Bundle(bundlePath, config);
 bundle.parse();
 bundle.writeAll();
